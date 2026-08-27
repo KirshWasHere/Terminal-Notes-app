@@ -2,7 +2,11 @@
 take notes without leaving your terminal, in a modern way
 ## Install
 ```bash
-npm install -g git+https://github.com/KirshWasHere/Terminal-Notes-app.git
+git clone https://github.com/KirshWasHere/Terminal-Notes-app.git
+cd Terminal-Notes-app
+npm install
+npm install -g .
+
 ```
 ## Usage
 ```bash
