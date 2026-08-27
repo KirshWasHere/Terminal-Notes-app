@@ -18,19 +18,15 @@ notes yourfile.md
 - `ESC` - Copy selected
 ## Syntax
 ## showcase
-<img width="1730" height="1305" alt="screenshot-2026-08-27_18-08-18" src="https://github.com/user-attachments/assets/fd1c8f9b-bb26-4cf9-9012-99cc31ef01e5" />
-<img width="1693" height="1308" alt="image" src="https://github.com/user-attachments/assets/f5307656-b8b9-4653-866c-be19ad0121fd" />
+<img width="1557" height="1313" alt="image" src="https://github.com/user-attachments/assets/16ec7288-5bb6-4797-893b-ac755fbd536a" /> <img width="1575" height="1325" alt="image" src="https://github.com/user-attachments/assets/ca4c67f3-3be6-48d9-8993-4385ee30d517" />
 ### Headings
 - `# text` - ASCII art heading
 - `## text` - Block style █▓▒░
 - `### text` - Bold heading
 ### Text Formatting
 - `**bold**`
-- `*italic*`
 - `` `code` ``
-- 
 ### Lists
-
 - `* item`
 - `- item`
 - `+ item`
