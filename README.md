@@ -1,5 +1,5 @@
 # Terminal Notes App
-Simple terminal notes app for Linux
+take notes without leaving your terminal, in a modern way
 ## Install
 ```bash
 npm install -g git+https://github.com/KirshWasHere/Terminal-Notes-app.git
