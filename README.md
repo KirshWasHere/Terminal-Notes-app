@@ -26,10 +26,7 @@ notes yourfile.md
 
 ## Syntax
 ## showcase
-<img width="2560" height="1407" alt="image" src="https://github.com/user-attachments/assets/b256cb33-575c-4034-aa6f-a3d9ad9c05b7" /> <img width="2560" height="1407" alt="image" src="https://github.com/user-attachments/assets/a7551933-5fc8-491f-afb5-eb5a37771044" /> <img width="2560" height="1407" alt="image" src="https://github.com/user-attachments/assets/9098584c-5a9f-4304-929e-887ec24261b6" />
-
-
-
+<img width="1280" height="1301" alt="image" src="https://github.com/user-attachments/assets/6e842978-b4ce-44d3-b19b-88f5a37b2496" />
 
 ### Headings
 
