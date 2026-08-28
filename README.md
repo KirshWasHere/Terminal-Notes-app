@@ -40,5 +40,5 @@ notes yourfile.md
 - `[text](url)`
 - `[[path/to/file]]`
 ### Code Blocks
-- `"""javascript` or `"""typescript` only js and ts for now
+- `"""javascript` `"""python` `"""c++` etc etc 190+languages
 - Close with `"""`
