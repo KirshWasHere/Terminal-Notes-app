@@ -18,6 +18,7 @@
     "@types/blessed": "^0.1.27",
     "@types/figlet": "^1.7.0",
     "blessed": "^0.1.81",
+    "cli-highlight": "^2.1.11",
     "figlet": "^1.11.4",
     "marked": "^18.0.11",
     "typescript": "^7.0.2"
