@@ -3,6 +3,7 @@ import blessed from 'blessed';
 import fs from 'fs';
 import path from 'path';
 import figlet from 'figlet';
+import { highlight } from 'cli-highlight';
 
 const screen = blessed.screen({
   smartCSR: true,
@@ -15,7 +16,6 @@ let lines: string[] = [''];
 let row = 0;
 let column = 0;
 let scroll = 0;
-let selector = false;
 let language = 0;
 let clipboard = '';
 let start: {line: number, col: number} | null = null;
@@ -147,10 +147,10 @@ const bar = blessed.box({
 
 const popup = blessed.list({
   parent: screen,
-  left: 'center',
-  top: 'center',
-  width: 40,
-  height: 15,
+  left: 0,
+  top: 0,
+  width: 20,
+  height: 4,
   border: {
     type: 'line'
   },
@@ -166,203 +166,10 @@ const popup = blessed.list({
     }
   },
   keys: true,
-  vi: true,
+  vi: false,
   mouse: true,
-  hidden: true,
-  label: ' Select Language '
+  hidden: true
 });
-
-function colorize(line: string): string {
-  const trimmed = line.trimStart();
-  if (trimmed.startsWith('//')) {
-    return `{gray-fg}${line}{/gray-fg}`;
-  }
-  
-  const position = line.indexOf('//');
-  if (position !== -1) {
-    const before = line.substring(0, position);
-    const comment = line.substring(position);
-    return highlight(before) + `{gray-fg}${comment}{/gray-fg}`;
-  }
-  
-  return highlight(line);
-}
-
-function highlight(line: string): string {
-  const tokens: Array<{text: string, color: string}> = [];
-  let i = 0;
-  
-  while (i < line.length) {
-    let matched = false;
-    
-    if (/\s/.test(line[i])) {
-      tokens.push({text: esc(line[i]), color: 'white'});
-      i++;
-      continue;
-    }
-    
-    if (line[i] === '`') {
-      let j = i + 1;
-      let inInterpolation = false;
-      while (j < line.length) {
-        if (line[j] === '\\') {
-          j += 2;
-          continue;
-        }
-        if (line[j] === '$' && line[j + 1] === '{') {
-          inInterpolation = true;
-        }
-        if (inInterpolation && line[j] === '}') {
-          inInterpolation = false;
-        }
-        if (line[j] === '`' && !inInterpolation) {
-          break;
-        }
-        j++;
-      }
-      tokens.push({text: esc(line.substring(i, j + 1)), color: 'yellow'});
-      i = j + 1;
-      matched = true;
-    }
-    
-    else if (line[i] === '"' || line[i] === "'") {
-      const quote = line[i];
-      let j = i + 1;
-      while (j < line.length && line[j] !== quote) {
-        if (line[j] === '\\') j++;
-        j++;
-      }
-      tokens.push({text: esc(line.substring(i, j + 1)), color: 'yellow'});
-      i = j + 1;
-      matched = true;
-    }
-    
-    else if (line[i] === '/' && i > 0) {
-      const before = line.substring(0, i).trim();
-      const regexTriggers = ['=', '(', '[', ',', 'return', ':', ';', '!', '&', '|', '?', '+', '-', '*', '%', '^', '~'];
-      const canBeRegex = regexTriggers.some(t => before.endsWith(t));
-      
-      if (canBeRegex) {
-        let j = i + 1;
-        let inCharClass = false;
-        while (j < line.length) {
-          if (line[j] === '\\') {
-            j += 2;
-            continue;
-          }
-          if (line[j] === '[') inCharClass = true;
-          if (line[j] === ']') inCharClass = false;
-          if (line[j] === '/' && !inCharClass) {
-            j++;
-            while (j < line.length && /[gimsuvy]/.test(line[j])) j++;
-            break;
-          }
-          j++;
-        }
-        tokens.push({text: esc(line.substring(i, j)), color: 'red'});
-        i = j;
-        matched = true;
-      }
-    }
-    
-    else if (/\d/.test(line[i]) || (line[i] === '.' && /\d/.test(line[i + 1]))) {
-      let j = i;
-      if (line[j] === '0' && /[xXbBoO]/.test(line[j + 1])) {
-        j += 2;
-        while (j < line.length && /[0-9a-fA-F]/.test(line[j])) j++;
-      } else {
-        let hasDecimal = line[i] === '.';
-        if (hasDecimal) j++;
-        
-        while (j < line.length && /\d/.test(line[j])) j++;
-        
-        if (!hasDecimal && line[j] === '.' && /\d/.test(line[j + 1])) {
-          j++;
-          while (j < line.length && /\d/.test(line[j])) j++;
-        }
-        
-        if (line[j] === 'e' || line[j] === 'E') {
-          j++;
-          if (line[j] === '+' || line[j] === '-') j++;
-          while (j < line.length && /\d/.test(line[j])) j++;
-        }
-        if (line[j] === 'n') j++;
-      }
-      tokens.push({text: esc(line.substring(i, j)), color: 'green'});
-      i = j;
-      matched = true;
-    }
-    
-    else if (/[a-zA-Z_$]/.test(line[i])) {
-      let j = i;
-      while (j < line.length && /[a-zA-Z0-9_$]/.test(line[j])) j++;
-      const word = line.substring(i, j);
-      
-      const keywords = [
-        'const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 
-        'class', 'import', 'export', 'from', 'async', 'await', 'try', 'catch', 
-        'new', 'this', 'super', 'extends', 'static', 'get', 'set', 'typeof', 
-        'instanceof', 'void', 'delete', 'in', 'of', 'yield', 'break', 'continue', 
-        'switch', 'case', 'default', 'do', 'throw', 'null', 'undefined', 'true', 
-        'false', 'finally', 'with', 'debugger', 'implements', 'interface', 'package',
-        'private', 'protected', 'public', 'enum'
-      ];
-      const builtins = [
-        'console', 'Math', 'Object', 'Array', 'String', 'Number', 'Boolean', 
-        'Date', 'RegExp', 'Promise', 'JSON', 'Error', 'window', 'document', 
-        'process', 'Buffer', 'module', 'require', 'exports', 'Set', 'Map',
-        'WeakSet', 'WeakMap', 'Symbol', 'BigInt', 'Infinity', 'NaN', 'parseInt',
-        'parseFloat', 'isNaN', 'isFinite', 'encodeURI', 'decodeURI'
-      ];
-      
-      if (keywords.includes(word)) {
-        tokens.push({text: esc(word), color: 'magenta'});
-        i = j;
-        matched = true;
-      } else if (builtins.includes(word)) {
-        tokens.push({text: esc(word), color: 'cyan'});
-        i = j;
-        matched = true;
-      } else {
-        let k = j;
-        while (k < line.length && /\s/.test(line[k])) k++;
-        
-        if (line[k] === '(') {
-          tokens.push({text: esc(word), color: 'blue'});
-          i = j;
-          matched = true;
-        }
-        else if (i > 0 && line[i - 1] === '.') {
-          tokens.push({text: esc(word), color: 'blue'});
-          i = j;
-          matched = true;
-        }
-        else {
-          tokens.push({text: esc(word), color: 'white'});
-          i = j;
-          matched = true;
-        }
-      }
-    }
-    
-    if (!matched) {
-      const char = line[i];
-      if ('+-*/%=<>!&|^~?:'.includes(char)) {
-        tokens.push({text: esc(char), color: 'white'});
-      } else {
-        tokens.push({text: esc(char), color: 'white'});
-      }
-      i++;
-    }
-  }
-  
-  let result = '';
-  for (const token of tokens) {
-    result += `{${token.color}-fg}${token.text}{/${token.color}-fg}`;
-  }
-  
-  return result;
-}
 
 function display(line: string, current: boolean, index: number): string {
   if (current) {
@@ -381,10 +188,12 @@ function display(line: string, current: boolean, index: number): string {
   }
   
   if (block.inBlock) {
-    if (block.lang === 'javascript' || block.lang === 'js' || block.lang === 'typescript' || block.lang === 'ts') {
-      return colorize(line);
+    try {
+      const highlighted = highlight(line, { language: block.lang || 'plaintext', ignoreIllegals: true });
+      return esc(highlighted);
+    } catch (err) {
+      return `{green-fg}${esc(line)}{/green-fg}`;
     }
-    return `{green-fg}${esc(line)}{/green-fg}`;
   }
   
   if (line.startsWith('# ')) {
@@ -625,13 +434,7 @@ editor.on('keypress', (ch: string, key: any) => {
   }
   
   if (key.name === 'escape') {
-    if (selector) {
-      selector = false;
-      popup.hide();
-      editor.focus();
-      draw();
-      return;
-    }
+    popup.hide();
     
     if (start && end) {
       clipboard = selected();
@@ -877,12 +680,8 @@ editor.on('keypress', (ch: string, key: any) => {
           
           if (lines[row].endsWith('"""')) {
             dirty = true;
-            selector = true;
-            const filtered = languages;
-            popup.setItems(filtered);
-            popup.show();
-            popup.focus();
-            screen.render();
+            popup.hide();
+            draw();
           } else {
             draw();
           }
@@ -898,35 +697,15 @@ editor.on('keypress', (ch: string, key: any) => {
     }
     
     if (lines[row].endsWith('"""')) {
-      selector = true;
-      const filtered = languages;
-      popup.setItems(filtered);
-      popup.show();
-      popup.focus();
-      screen.render();
+      popup.hide();
+      draw();
     } else {
       draw();
     }
   }
 });
 
-popup.on('select', (item: any) => {
-  const lang = item.content.toLowerCase();
-  const line = lines[row];
-  lines[row] = line.replace('"""', `"""${lang}`);
-  lines.splice(row + 1, 0, '');
-  lines.splice(row + 2, 0, '"""');
-  row++;
-  column = 0;
-  selector = false;
-  popup.hide();
-  editor.focus();
-  dirty = true;
-  draw();
-});
-
 popup.key(['escape'], () => {
-  selector = false;
   popup.hide();
   editor.focus();
   draw();
